@@ -1,5 +1,4 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, and Greenfoot)
-import org.apache.http.io.SessionOutputBuffer;
 
 import java.util.ArrayList;
 
@@ -15,6 +14,8 @@ public class Ant extends Creature
     private final int MAX_LEVEL = 10;
     
     private int profession;
+
+    public static final int phRange = 100;
 
     public Ant(AntHill home)
     {
@@ -43,7 +44,7 @@ public class Ant extends Creature
             setFood(3);
         }
         else{
-            setMAX_AGE(8000);
+            setMAX_AGE(10000);
             setHp(6);
 
             setHpStep(400);
@@ -380,19 +381,39 @@ public class Ant extends Creature
         else if(foodNotFully() && getObjectsInRange(viewingRadius,TakenFood.class).size() > 0){
             myTarget = getObjectsInRange(viewingRadius,TakenFood.class).get(0);
         }
+        /*else if(myTarget == null && getObjectsInRange(viewingRadius,Block.class).size() > 0){
+            Block bestBlock = null;
+            for(Block block : getObjectsInRange(viewingRadius,Block.class)){
+                if(block.canDig(this) && canDig && !isCarryingGround) {
+                    if (bestBlock == null || bestBlock.getEndurance() > block.getEndurance()) {
+                        bestBlock = block;
+                    }
+                }
+            }
+            myTarget = bestBlock;
+        }*/
 
         if(touchingBlock!=null && touchingBlock.canDig(this) && canDig && !isCarryingGround){
-            myTarget = touchingBlock;
             if(haveTakenObject()) {
                 putObject();
             }
-            else{
-                targetBlock = touchingBlock;
+            else if(!participateInBattle && (targetBlock == null && Greenfoot.getRandomNumber(3) == 0 || touchingBlock == targetBlock ||
+                    targetBlock != null && targetBlock.getDiggers() < touchingBlock.getDiggers() && Greenfoot.getRandomNumber(2) == 0)){
+                touchingBlock.dig(this);
+                if(targetBlock != touchingBlock) {
+                    if(targetBlock != null)
+                        targetBlock.decreaseDiggers();
+                    targetBlock = touchingBlock;
+                    targetBlock.increaseDiggers();
+                }
                 takenGround = new TakenGround();
                 getWorld().addObject(takenGround, getX(), getY());
                 take(takenGround);
                 isCarryingGround = true;
             }
+        }
+        else if(touchingBlock!=null && touchingBlock == targetBlock && !touchingBlock.canDig(this)){
+            targetBlock = null;
         }
         else if(!haveTakenObject() && isTouching(TakenGround.class)){
             TakenGround ground = (TakenGround) getOneIntersectingObject(TakenGround.class);
@@ -521,17 +542,31 @@ public class Ant extends Creature
         }
 
         if(touchingBlock!=null && touchingBlock.canDig(this) && canDig && !isCarryingGround){
-            myTarget = touchingBlock;
             if(haveTakenObject()) {
                 putObject();
             }
-            else{
-                targetBlock = touchingBlock;
+            else if(!participateInBattle && (targetBlock == null && Greenfoot.getRandomNumber(3) == 0 || touchingBlock == targetBlock ||
+                    targetBlock != null && targetBlock.getDiggers() < touchingBlock.getDiggers() && Greenfoot.getRandomNumber(2) == 0)){
+                touchingBlock.dig(this);
+                if(targetBlock != touchingBlock) {
+                    if(targetBlock != null)
+                        targetBlock.decreaseDiggers();
+                    targetBlock = touchingBlock;
+                    targetBlock.increaseDiggers();
+                }
                 takenGround = new TakenGround();
                 getWorld().addObject(takenGround, getX(), getY());
                 take(takenGround);
                 isCarryingGround = true;
+
+                /*for(Ant ant : getObjectsInRange(20, Ant.class)){
+                    if(Greenfoot.getRandomNumber(3) == 0)
+                        ant.targetBlock = targetBlock;
+                }*/
             }
+        }
+        else if(touchingBlock!=null && touchingBlock == targetBlock && !touchingBlock.canDig(this)){
+            targetBlock = null;
         }
         else if(myTarget == null && targetBlock != null){
             myTarget = targetBlock;
@@ -554,7 +589,7 @@ public class Ant extends Creature
         
         transportFood();
 
-        if(profession == 1 && getHomeHill().getFood() / 3 > getObjectsInRange(viewingRadius, Egg.class).size() && !isCarryingFood && getHomeHill().getNurseNumber() < 5 && getHomeHill().haveQueen()){
+        if(profession == 1 && getObjectsInRange(viewingRadius, Egg.class).size() > getHomeHill().getNurseNumber() && !isCarryingFood){
             profession = 3;
             getHomeHill().newNurse();
         }
@@ -683,7 +718,7 @@ public class Ant extends Creature
             turnTowards(pheromone.getX(), pheromone.getY());
             int rotToPh = getRotation();
             setRotation(rot);
-            if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+            if (Math.abs(rot - rotToPh) <= phRange || Math.abs(rot - rotToPh) >= 360 - phRange) {
                 sumOfIntensity += pheromone.getIntensity();
             }
         }
@@ -694,7 +729,7 @@ public class Ant extends Creature
                 turnTowards(pheromone.getX(), pheromone.getY());
                 int rotToPh = getRotation();
                 setRotation(rot);
-                if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+                if (Math.abs(rot - rotToPh) <= phRange || Math.abs(rot - rotToPh) >= 360 - phRange) {
                     n++;
                     phX += (int)(pheromone.getX() * ((double)pheromone.getIntensity() / sumOfIntensity));
                     phY += (int)(pheromone.getY() * ((double)pheromone.getIntensity() / sumOfIntensity));
@@ -778,6 +813,9 @@ public class Ant extends Creature
             if(food > 0){
                 getWorld().addObject(new Food(food, 2, 1), getX(), getY());
             }
+
+            if(targetBlock != null)
+                targetBlock.decreaseDiggers();
 
             getWorld().removeObject(this);
         }

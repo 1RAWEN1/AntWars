@@ -1,5 +1,7 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 
+import java.util.ArrayList;
+
 /**
  * Write a description of class QueenAnt here.
  * 
@@ -216,7 +218,7 @@ public class QueenAnt extends Creature
                 intersectMale();
             }
             else{
-                if(isFly() && !canSeeEnemy1()){
+                if(isFly() && !canSeeEnemy1() && !isTouching(Obs.class)){
                     stopFly();
                 }
                 else if(!isFly()){
@@ -231,15 +233,15 @@ public class QueenAnt extends Creature
                     }
                     else {
                         randomWalk();
+                        createAntHill();
                     }
-                    createAntHill();
                 }
                 else{
                     randomWalk();
                 }
             }
         }
-        else if(canSeeEnemy() || !foodNotFully() || calculateDistToHome() < viewingRadius && getHomeHill().getFood() > 0){
+        else if(canSeeEnemy() || !foodNotFully() || getHomeHill().getWorkerNumber() >= 3 || calculateDistToHome() < viewingRadius && getHomeHill().getFood() > 0){
             walkTowardsHome();
         }
         else if(canSeeFood()){
@@ -275,7 +277,7 @@ public class QueenAnt extends Creature
             turnTowards(pheromone.getX(), pheromone.getY());
             int rotToPh = getRotation();
             setRotation(rot);
-            if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+            if (Math.abs(rot - rotToPh) <= Ant.phRange || Math.abs(rot - rotToPh) >= 360 - Ant.phRange) {
                 sumOfIntensity += pheromone.getIntensity();
             }
         }
@@ -286,7 +288,7 @@ public class QueenAnt extends Creature
             turnTowards(pheromone.getX(), pheromone.getY());
             int rotToPh = getRotation();
             setRotation(rot);
-            if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+            if (Math.abs(rot - rotToPh) <= Ant.phRange || Math.abs(rot - rotToPh) >= 360 - Ant.phRange) {
                 n++;
                 phX += (int)(pheromone.getX() * ((double)pheromone.getIntensity() / sumOfIntensity));
                 phY += (int)(pheromone.getY() * ((double)pheromone.getIntensity() / sumOfIntensity));
@@ -317,9 +319,10 @@ public class QueenAnt extends Creature
     
     private Egg newEgg;
     private void spawnEgg(){
-        if(Greenfoot.getRandomNumber(100) < 10 && getObjectsInRange(viewingRadius,Egg.class).size() < Math.min((getHomeHill().getFood() / 3) + (food / 3), getHomeHill().getNurseNumber() + getHomeHill().queens) && !getHomeHill().fully() && !foodNotFully()){
+        ArrayList<Egg> eggs = (ArrayList<Egg>) getObjectsInRange(viewingRadius,Egg.class);
+        if(Greenfoot.getRandomNumber(100) < 10 && (eggs.size() == 0 || !eggs.get(getObjectsInRange(viewingRadius,Egg.class).size() - 1).foodNotFully())/*getObjectsInRange(viewingRadius,Egg.class).size() < Math.min((getHomeHill().getFood() / 3) + (food / 3), getHomeHill().getNurseNumber() + getHomeHill().queens)*/ && !foodNotFully()){
             food--;
-            newEgg = new Egg(Greenfoot.getRandomNumber(2) == 1 ? 2 : Greenfoot.getRandomNumber(50) < 20 ? 3 : 1, getHomeHill(), getHomeHill().getFood() >= 10);
+            newEgg = new Egg(Greenfoot.getRandomNumber(3) == 1 ? 2 : Greenfoot.getRandomNumber(50) < 20 ? 3 : 1, getHomeHill(), getHomeHill().getAntNumber() >= 10 && Greenfoot.getRandomNumber(10) < 2);
             getWorld().addObject(newEgg,getX() + (int) (Math.cos(Math.toRadians(getRotation() + 180)) * getImage().getWidth() / 2)
             , getY() + (int) (Math.sin(Math.toRadians(getRotation() + 180)) * getImage().getWidth() / 2));
 
@@ -358,27 +361,36 @@ public class QueenAnt extends Creature
             else if(foodNotFully() && getHomeHill().getFood() > 0){
                 myTarget = null;
             }
-            else if (getHomeHill().getFood() == 0 && foodNotFully() || !isQueen) {
+            else if (getHomeHill().getFood() == 0 && foodNotFully() && getHomeHill().getAntNumber() < 5 || !isQueen) {
                 if (myTarget == null || newEgg != null && newEgg.foodNotFully() && food < 1 + newEgg.needFood()) {
                     myTarget = getHomeHill();
                 }
             }
         }
 
-        if(touchingBlock!=null && touchingBlock.canDig(this) && canDig && !isCarryingGround){
-            myTarget = touchingBlock;
+        if(touchingBlock!=null && touchingBlock.canDig(this) && canDig && !isCarryingGround && isQueen){
             if(haveTakenObject()) {
                 put();
             }
-            else{
-                targetBlock = touchingBlock;
+            else if(!participateInBattle && (targetBlock == null && Greenfoot.getRandomNumber(3) == 0 || touchingBlock == targetBlock ||
+                    targetBlock != null && targetBlock.getDiggers() < touchingBlock.getDiggers() && Greenfoot.getRandomNumber(2) == 0)){
+                touchingBlock.dig(this);
+                if(targetBlock != touchingBlock) {
+                    if(targetBlock != null)
+                        targetBlock.decreaseDiggers();
+                    targetBlock = touchingBlock;
+                    targetBlock.increaseDiggers();
+                }
                 takenGround = new TakenGround();
                 getWorld().addObject(takenGround, getX(), getY());
                 take(takenGround);
                 isCarryingGround = true;
             }
         }
-        else if(myTarget == null && targetBlock != null){
+        else if(touchingBlock!=null && touchingBlock == targetBlock && !touchingBlock.canDig(this)){
+            targetBlock = null;
+        }
+        else if(myTarget == null && targetBlock != null && isQueen){
             myTarget = targetBlock;
         }
 
@@ -468,6 +480,9 @@ public class QueenAnt extends Creature
             else{
                 getHomeHill().princessDead();
             }
+
+            if(targetBlock != null)
+                targetBlock.decreaseDiggers();
             getWorld().removeObject(this);
         }
     }

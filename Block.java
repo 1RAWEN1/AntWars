@@ -10,6 +10,23 @@ public class Block extends UndergroundObs
     private int endurance=MAX_ENDURANCE;
 
     private boolean isAtEdgeOfHome;
+    private int diggers;
+
+    public int getEndurance() {
+        return endurance;
+    }
+
+    public void increaseDiggers(){
+        diggers++;
+    }
+
+    public void decreaseDiggers(){
+        diggers--;
+    }
+
+    public int getDiggers() {
+        return diggers;
+    }
 
     private List<Integer> position = new ArrayList<>();
 

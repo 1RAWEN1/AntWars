@@ -133,7 +133,7 @@ public class Prince extends Creature
             turnTowards(pheromone.getX(), pheromone.getY());
             int rotToPh = getRotation();
             setRotation(rot);
-            if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+            if (Math.abs(rot - rotToPh) <= Ant.phRange || Math.abs(rot - rotToPh) >= 360 - Ant.phRange) {
                 sumOfIntensity += pheromone.getIntensity();
             }
         }
@@ -144,7 +144,7 @@ public class Prince extends Creature
             turnTowards(pheromone.getX(), pheromone.getY());
             int rotToPh = getRotation();
             setRotation(rot);
-            if (Math.abs(rot - rotToPh) <= 90 || Math.abs(rot - rotToPh) > 270) {
+            if (Math.abs(rot - rotToPh) <= Ant.phRange || Math.abs(rot - rotToPh) >= 360 - Ant.phRange) {
                 n++;
                 phX += (int)(pheromone.getX() * ((double)pheromone.getIntensity() / sumOfIntensity));
                 phY += (int)(pheromone.getY() * ((double)pheromone.getIntensity() / sumOfIntensity));

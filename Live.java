@@ -107,6 +107,10 @@ public class Live extends Actor
         return (int)Math.sqrt(Math.pow(getX() - home.getX(), 2) + Math.pow(getY() - home.getY(), 2));
     }
 
+    public int calculateDistTo(Actor act){
+        return (int)Math.sqrt(Math.pow(getX() - act.getX(), 2) + Math.pow(getY() - act.getY(), 2));
+    }
+
     public void setHp(int maxHp){
         MAX_HP=maxHp;
         hp=MAX_HP;
@@ -129,7 +133,7 @@ public class Live extends Actor
         }
     }
 
-    private int MAX_AGE = 10000;
+    private int MAX_AGE = 15000;
     private SimpleTimer ageTimer = new SimpleTimer();
 
     public int getMAX_AGE() {

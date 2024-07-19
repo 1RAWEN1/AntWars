@@ -1,5 +1,4 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, and Greenfoot)
-import io.github.classgraph.json.JSONUtils;
 
 public class AntHill extends Actor
 {
@@ -17,7 +16,7 @@ public class AntHill extends Actor
 
     private int nurses = 0;
     
-    private final int maxAnts = 20;
+    private final int maxAnts = 30;
 
     private Counter foodCounter;
     
@@ -35,14 +34,12 @@ public class AntHill extends Actor
     
     public AntHill()
     {
-        AntWorld.arrayOfHouses.add(this);
     }
 
     public AntHill(int numberOfAnts)
     {
         teams++;
         teamNum=teams;
-        AntWorld.arrayOfHouses.add(this);
     }
 
     boolean createWithoutQueen = false;
@@ -56,7 +53,6 @@ public class AntHill extends Actor
 
         teams++;
         teamNum=teams;
-        AntWorld.arrayOfHouses.add(this);
     }
 
     public AntHill(int numberOfAnts, boolean createWithoutQueen, int team)
@@ -69,14 +65,12 @@ public class AntHill extends Actor
 
         teamNum=team;
         teams = Math.max(teamNum, teams);
-        AntWorld.arrayOfHouses.add(this);
     }
     
     public AntHill(int numberOfAnts, int team)
     {
         teamNum=team;
         teams = Math.max(teamNum, teams);
-        AntWorld.arrayOfHouses.add(this);
     }
 
     public AntHill(int numberOfAnts, int team, int queens)
@@ -84,7 +78,6 @@ public class AntHill extends Actor
         teamNum=team;
         teams = Math.max(teamNum, teams);
         this.queens = queens;
-        AntWorld.arrayOfHouses.add(this);
     }
     
     public void setAntNumber(int ants){

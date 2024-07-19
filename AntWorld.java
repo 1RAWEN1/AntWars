@@ -1,18 +1,17 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, and Greenfoot)
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 public class AntWorld extends World
 {
     public static final int SIZE = 620;
-    
-    public static ArrayList<AntHill> arrayOfHouses;
 
     public static ArrayList<Color> teamColors = new ArrayList<>();
 
     public AntWorld()
     {
         super(1400, 750, 1);
-        arrayOfHouses = new ArrayList<>();
         if(teamColors.size() == 0){
             generateNewColors();
             /*teamColors.add(Color.BLUE);
@@ -68,7 +67,6 @@ public class AntWorld extends World
     private void newWorld(){
         hasWinner = false;
         AntHill.teams=0;
-        arrayOfHouses.clear();
         generateNewColors();
         
         /*int rand=Greenfoot.getRandomNumber(5)+2;
@@ -104,6 +102,8 @@ public class AntWorld extends World
         removeObjects(getObjects(null));
 
         int antHills = Greenfoot.getRandomNumber(5) + 2;
+
+        ants = new int[antHills];
         int angle = Greenfoot.getRandomNumber(90);
         //double cos = Math.cos(Math.toRadians(angle <= 45 ? angle : 90 - angle));
         distanceX = Greenfoot.getRandomNumber((getWidth() / 2) - 300 - 120) + 300;
@@ -261,13 +261,13 @@ public class AntWorld extends World
     
     public void analysis(){
         fullSoldiers=0;
-        for(AntHill ah: arrayOfHouses){
+        for(AntHill ah: getObjects(AntHill.class)){
             fullSoldiers+=ah.getSolNumber();
         }
         if(fullSoldiers==0){
             fullSoldiers=1;
         }
-        for(AntHill ah: arrayOfHouses){
+        for(AntHill ah: getObjects(AntHill.class)){
             ah.setChanceToWin((double)ah.getSolNumber()/fullSoldiers);
         }
     }
@@ -276,6 +276,8 @@ public class AntWorld extends World
 
     boolean absWinner;
     boolean hasWinner;
+
+    int[] ants;
     public void act(){
         MouseInfo mi = Greenfoot.getMouseInfo();
         if(mi != null && mi.getActor() == null) {
@@ -297,11 +299,13 @@ public class AntWorld extends World
             int antsInWorld = 0;
             winTeam = -1;
             absWinner = false;
+
+            Arrays.fill(ants, 0);
             //analysis();
-            for (AntHill ah : arrayOfHouses) {
+            for (AntHill ah : getObjects(AntHill.class)) {
                 antsInWorld += ah.getAntNumber();
                 if(ah.haveQueen()) {
-                    if (winTeam == -1) {
+                    /*if (winTeam == -1) {
                         winTeam = ah.getTeam();
                         if (ah.fully()) {
                             absWinner = true;
@@ -313,6 +317,23 @@ public class AntWorld extends World
                         } else {
                             winTeam = 0;
                         }
+                    }*/
+                    ants[ah.getTeam() - 1] += ah.getAntNumber();
+                }
+            }
+
+            for(int i = 0; i < ants.length; i++){
+                if (winTeam == -1 && ants[i] > 0) {
+                    winTeam = i + 1;
+                    if (ants[i] >= 45) {
+                        absWinner = true;
+                    }
+                } else if (i + 1 != winTeam && !absWinner || i + 1 != winTeam && ants[i] >= 45) {
+                    if (ants[i] >= 45 && !absWinner) {
+                        winTeam = i + 1;
+                        absWinner = true;
+                    } else {
+                        winTeam = 0;
                     }
                 }
             }

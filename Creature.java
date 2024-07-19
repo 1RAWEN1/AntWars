@@ -223,13 +223,13 @@ public class Creature  extends Live
             else {
                 runningDirection = Greenfoot.getRandomNumber(4)*90;
             }*/
-            if(isUnderGround() || !haveTakenObject())
+            //if(isUnderGround() || !haveTakenObject())
                 leftHand = rot < runningDirection && Math.abs(rot - runningDirection) < 180
                         || rot > runningDirection && Math.abs(rot - runningDirection) > 180
                         || Math.abs(rot - runningDirection) == 180 && Greenfoot.getRandomNumber(2) == 1
                         || rot == runningDirection && Greenfoot.getRandomNumber(2) == 1;
-            else
-                leftHand = Greenfoot.getRandomNumber(2) == 1;
+            /*else
+                leftHand = Greenfoot.getRandomNumber(2) == 1;*/
 
             setLocation(startX + (int) (Math.cos(Math.toRadians(runningDirection)) * SPEED), startY + (int) (Math.sin(Math.toRadians(runningDirection)) * SPEED));
             
@@ -282,8 +282,8 @@ public class Creature  extends Live
         }
         //try{
         if(!stop && !moved1()) {
-            if (target != null && intersects(target) || !isUnderGround() && sum == 0) {
-                if (target != null && intersects(target)) {
+            if (target != null && calculateDistTo(target) < target.getImage().getWidth() + getImage().getWidth() + 5 || !isUnderGround() && sum == 0) {
+                if (target != null && calculateDistTo(target) < target.getImage().getWidth() + getImage().getWidth() + 5) {
                     atTarget();
                 }
                 walk();
@@ -438,14 +438,7 @@ public class Creature  extends Live
         }
 
         if(touchingBlock != null){
-            if(touchingBlock.canDig(this) && canDig && !haveTakenObject() && !participateInBattle){
-                touchingBlock.dig(this);
-                deltaX = 0;
-                deltaY = 0;
-            }
-            else{
-                turnWhenObsIsAhead(touchingBlock);
-            }
+            turnWhenObsIsAhead(touchingBlock);
         }
         else if(touchingObs != null){
             turnWhenObsIsAhead(touchingObs);
